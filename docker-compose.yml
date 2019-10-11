@@ -1,0 +1,66 @@
+version: '3.5'
+services:
+    #Nginx Service
+    webserver:
+        image: nginx:alpine
+        container_name: l6-web
+        restart: unless-stopped
+        environment:
+            - VIRTUAL_HOST=app.l6
+        tty: true
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+        depends_on:
+            - app
+    #PHP Service
+    app:
+        build:
+            context: ./docker/php
+            dockerfile: Dockerfile
+        image: chipaau/php:7.2-fpm
+        container_name: l6-app
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: app
+            SERVICE_TAGS: dev
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini:ro
+        depends_on: 
+            - db
+    #MySQL Service
+    db:
+        image: mysql:8
+        container_name: l6-db
+        restart: unless-stopped
+        tty: true
+        environment:
+            MYSQL_DATABASE: l6
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_USER: user
+            MYSQL_PASSWORD: password
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - l6data:/var/lib/mysql
+            - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+    ui:
+        container_name: l6-ui
+        image: chipaau/node:10
+        user: user
+        stdin_open: true
+        volumes:
+            - ./:/var/www/app
+        working_dir: /var/www/app
+#Docker Networks
+networks:
+    default:
+        external:
+            name: nginx-proxy
+#Volumes
+volumes:
+    l6data:
+        driver: local
