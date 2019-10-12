@@ -1,5 +1,4 @@
-# GitHub Action for Laravel with MySQL and Redis
-name: Testing Laravel with MySQL
+name: Running Tests
 on: [push, pull_request]
 jobs:
   laravel:
@@ -28,9 +27,9 @@ jobs:
         options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 15
       matrix:
-        php-versions: ['7.2', '7.3', '7.4']
+        php-versions: ['7.2', '7.3']
     steps:
       - name: Checkout
         uses: actions/checkout@v1
